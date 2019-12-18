@@ -383,4 +383,65 @@ bet_mod %>%
   filter(Rank== 1) %>%
   summarise_each(funs(t.test(.[Treatment == "pCO2"], .[Treatment == "Control"])$p.value), vars = betdistbc_mod)
 
+                             
+###########################################################
+##########################GJAM analyses####################
+###########################################################      
+                             
+ x<-read.csv("GCAug19_sampledata_LULU.csv",header=TRUE) # Load the covariates
+y<-read.csv("GCAug19_OTUs_LULU.csv",header=TRUE) #Load the OTU table
+
+# Make sure y and x samples are organized in the same order
+y[,1]<-as.character(y[,1])
+x[,1]<-as.character(x[,1])
+y<-y[order(y[,1]),]
+x<-x[order(x[,1]),]
+
+#rearrange the treatment and genotype factors to have the right reference (for example control treatment as the reference treatment)
+x[,4]<-as.character(x[,4])  
+x[,4][x[,4]=="All"]<-"Combined"
+x[,4]<-as.factor(x[,4])
+x[,4]<-relevel(x[,4],"Control")
+x[,4]<-factor(x[,4],levels=c("Control","Combined","Bacteria","Heat","pCO2"))
+x[,3]<-as.character(x[,3])
+x[,3][x[,3]=="G38"]<-"Best-38"
+x[,3][x[,3]=="G12"]<-"Best-12"
+x[,3][x[,3]=="G2"]<-"Worst-12"
+x[,3][x[,3]=="G20"]<-"Best-20"
+x[,3][x[,3]=="Worst-12"]<-"Worst-2"
+x[,3][x[,3]=="G27"]<-"Worst-27"
+x[,3][x[,3]=="G31"]<-"Worst-31"
+x[,3][x[,3]=="G34"]<-"Worst-34"
+x[,3][x[,3]=="G4"]<-"Best-4"
+x[,3]<-as.factor(x[,3])
+x[,3]<-factor(x[,3],levels=c("Best-38","Best-4","Best-12","Best-20","Worst-2","Worst-34”,”Worst-31”,”Worst-27"))
+x[,3]<-relevel(x[,3],ref="Best-38")
+
+# remove the sample column
+y<-y[,-1]
+
+# Load GJAM
+library(gjam)
+
+#Parameter for the models (number of iterations, length of burnin, and types of data)
+ml   <- list(ng = 10000, burnin = 500, typeNames = "CC")
+
+# Run the regional model (across reefs)
+out  <- gjam(~Treatment+Genotype, x, y, modelList = ml)
+full <- gjamSensitivity(out)
+
+# Run local models (within reef)
+yPandora <-y[x$Genotype%in%c("Worst-27","Worst-31","Worst-34"),]
+xPandora <-x[x$Genotype%in%c("Worst-27","Worst-31","Worst-34"),]
+xPandora[,3]<-as.factor(as.character(xPandora[,3]))
+xPandora[,3]<-factor(xPandora[,3],levels=c("Worst-34","Worst-31","Worst-27"))
+outPandora  <- gjam(~Treatment+Genotype, xPandora, yPandora, modelList = ml)
+Pandora <- gjamSensitivity(outPandora)
+
+yRib <-y[x$Genotype%in%c("Best-38","Best-12","Best-20"),]
+xRib <-x[x$Genotype%in%c("Best-38","Best-12","Best-20"),]
+xRib[,3]<-as.factor(as.character(xRib[,3]))
+xRib[,3]<-factor(xRib[,3],levels=c("Best-38","Best-12","Best-20"))
+outRib  <- gjam(~Treatment+Genotype, xRib, yRib, modelList = ml)
+Rib <- gjamSensitivity(outRib)
 
