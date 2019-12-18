@@ -388,8 +388,8 @@ bet_mod %>%
 ##########################GJAM analyses####################
 ###########################################################      
                              
- x<-read.csv("GCAug19_sampledata_LULU.csv",header=TRUE) # Load the covariates
-y<-read.csv("GCAug19_OTUs_LULU.csv",header=TRUE) #Load the OTU table
+ x<-read.csv("GJAM_GC19_sampledata_LULU.csv",header=TRUE) # Load the covariates
+y<-read.csv("GJAM_GC19_OTUs_LULU.csv",header=TRUE) #Load the OTU table
 
 # Make sure y and x samples are organized in the same order
 y[,1]<-as.character(y[,1])
